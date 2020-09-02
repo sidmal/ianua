@@ -51,9 +51,9 @@ const (
 )
 
 var (
-	ErrorClientNotFound   = NewError("mr000008", "client with specified identifier not found")
-	ErrorProjectNotFound  = NewError("mr000008", "project with specified identifier not found")
-	ErrorProjectInactive  = NewError("mr000008", "project with specified identifier is inactive")
+	ErrorMerchantNotFound = NewError("mr000008", "client with specified identifier not found")
+	ErrorServiceNotFound  = NewError("mr000008", "service with specified identifier not found")
+	ErrorServiceInactive  = NewError("mr000008", "service with specified identifier is inactive")
 	ErrorProviderNotFound = NewError("mr000008", "provider for project with received identifier not found")
 	ErrorProviderInactive = NewError("mr000008", "provider for project with received identifier is inactive")
 	ErrorCourseNotFound   = NewError("mr000008", "rate for currency conversion from client balance currency to project recipient currency not found")

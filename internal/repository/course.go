@@ -4,8 +4,8 @@ import (
 	"context"
 	"database/sql"
 	"github.com/jmoiron/sqlx"
+	"github.com/sidmal/ianua/pkg"
 	"go.uber.org/zap"
-	"ianua/pkg"
 	"time"
 )
 
@@ -21,7 +21,7 @@ func newCourseRepository(db *sqlx.DB, cacheLifetime int, logger *zap.Logger) Cou
 	return repository
 }
 
-func (m *courseRepository) GetCourse(ctx context.Context, from, to string) (float32, error) {
+func (m *courseRepository) GetCourseRate(ctx context.Context, from, to string) (float32, error) {
 	cacheKey := from + to
 	cache, ok := m.cache[cacheKey]
 	current := time.Now()
@@ -31,7 +31,7 @@ func (m *courseRepository) GetCourse(ctx context.Context, from, to string) (floa
 	}
 
 	rate := float32(0)
-	query := "SELECT `value` FROM courses WHERE `from` = $1 AND `to` = $2 AND `date` <= $3 AND `deleted` IS NULL " +
+	query := "SELECT `value` FROM courses WHERE `from` = $1 AND `to` = $2 AND `date` <= $3 AND `deleted_at` IS NULL " +
 		"ORDER BY date"
 	args := []interface{}{from, to, current}
 	err := m.db.GetContext(ctx, &rate, query, args...)

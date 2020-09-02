@@ -18,9 +18,9 @@ const (
 )
 
 type Interface interface {
-	GetClientRepository() ClientRepositoryInterface
+	GetClientRepository() MerchantRepositoryInterface
 	GetCourseRepository() CourseRepositoryInterface
-	GetProjectRepository() ProjectRepositoryInterface
+	GetProjectRepository() ProviderRepositoryInterface
 	GetTransactionRepository() TransactionRepositoryInterface
 	GetAccountingEntryRepository() AccountingEntryRepositoryInterface
 }
@@ -33,8 +33,8 @@ type CacheLifetime struct {
 
 type Repository struct {
 	course  CourseRepositoryInterface
-	client  ClientRepositoryInterface
-	project ProjectRepositoryInterface
+	client  MerchantRepositoryInterface
+	project ProviderRepositoryInterface
 	order   TransactionRepositoryInterface
 }
 
@@ -68,16 +68,15 @@ type Cache interface {
 }
 
 type CourseRepositoryInterface interface {
-	GetCourse(ctx context.Context, from, to string) (float32, error)
+	GetCourseRate(ctx context.Context, from, to string) (float32, error)
 }
 
-type ClientRepositoryInterface interface {
-	GetClient(ctx context.Context, uuid string) (*Client, error)
-	GetClientBalance(ctx context.Context, uuid string) (*ClientBalance, error)
+type MerchantRepositoryInterface interface {
+	GetMerchant(ctx context.Context, uuid string) (*Merchant, error)
 }
 
-type ProjectRepositoryInterface interface {
-	GetProject(ctx context.Context, uuid string) (*Project, error)
+type ProviderRepositoryInterface interface {
+	GetService(ctx context.Context, uuid string) (*Service, error)
 	GetProvider(ctx context.Context, oid primitive.ObjectID) (*Provider, error)
 }
 
@@ -96,7 +95,7 @@ func NewRepository(db *sqlx.DB, cacheLifetime *CacheLifetime, logger *zap.Logger
 	return repository
 }
 
-func (m *Repository) GetClientRepository() ClientRepositoryInterface {
+func (m *Repository) GetClientRepository() MerchantRepositoryInterface {
 	return m.client
 }
 
@@ -104,7 +103,7 @@ func (m *Repository) GetCourseRepository() CourseRepositoryInterface {
 	return m.course
 }
 
-func (m *Repository) GetProjectRepository() ProjectRepositoryInterface {
+func (m *Repository) GetProjectRepository() ProviderRepositoryInterface {
 	return m.project
 }
 
