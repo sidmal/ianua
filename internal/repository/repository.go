@@ -72,7 +72,7 @@ type CourseRepositoryInterface interface {
 }
 
 type MerchantRepositoryInterface interface {
-	GetMerchant(ctx context.Context, uuid string) (*Merchant, error)
+	GetClient(ctx context.Context, uuid string) (*Client, error)
 }
 
 type ProviderRepositoryInterface interface {
@@ -81,7 +81,7 @@ type ProviderRepositoryInterface interface {
 }
 
 type TransactionRepositoryInterface interface {
-	GetTransactionByClientTransactionId(ctx context.Context, clientId int, transactionId string) (*Transaction, error)
+	GetTransactionByClientTxnId(ctx context.Context, clientId uint64, clientTxnId string) (*Transaction, error)
 	//CreateOrder(in *PaymentIn) (*Order, error)
 	//Update(id int64, status int, gatewayOrderId string) error
 	//RejectPayment(id int64) error

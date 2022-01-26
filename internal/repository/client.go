@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-type Merchant struct {
+type Client struct {
 	Model
 	Name       string   `db:"name" json:"name" validate:"required"`
 	SecretKey  string   `db:"secret_key" json:"secret_key" validate:"required,max=255"`
@@ -19,14 +19,14 @@ type Merchant struct {
 	Projects   []string `db:"-" json:"-"`
 }
 
-type merchantRepository courseRepository
+type clientRepository repository
 
 func newMerchantRepository(
 	db *sqlx.DB,
 	cacheLifetime int,
 	logger *zap.Logger,
 ) MerchantRepositoryInterface {
-	repository := &merchantRepository{
+	repository := &clientRepository{
 		db:            db,
 		logger:        logger,
 		cacheLifetime: cacheLifetime,
@@ -35,15 +35,15 @@ func newMerchantRepository(
 	return repository
 }
 
-func (m *merchantRepository) GetMerchant(ctx context.Context, uuid string) (*Merchant, error) {
+func (m *clientRepository) GetClient(ctx context.Context, uuid string) (*Client, error) {
 	cache, ok := m.cache[uuid]
 	current := time.Now()
 
 	if ok && cache.expire.After(current) {
-		return cache.value.(*Merchant), nil
+		return cache.value.(*Client), nil
 	}
 
-	merchant := new(Merchant)
+	merchant := new(Client)
 	query := `SELECT uuid, name, secret_key, fee_percent, balance, currency FROM merchants WHERE uuid = $1 AND deleted_at IS NULL`
 	args := []interface{}{uuid}
 	err := m.db.GetContext(ctx, merchant, query, args...)
