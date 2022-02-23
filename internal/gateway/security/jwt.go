@@ -2,13 +2,14 @@ package security
 
 import (
 	"github.com/sidmal/ianua/internal/entity"
+	"github.com/sidmal/ianua/internal/gateway/transport"
 	"time"
 )
 
 type JWT struct {
-	sign  *Sign
-	opts  *entity.GatewaySecurityJWTOpts
-	token *token
+	httpCl *transport.HttpClient
+	opts   *entity.GatewaySecurityJWTOpts
+	token  *token
 }
 
 type token struct {
@@ -16,10 +17,10 @@ type token struct {
 	expire time.Time
 }
 
-func newJWTSigner(sign *Sign, opts *entity.GatewaySecurityJWTOpts) Signer {
+func newJWTSigner(httpCl *transport.HttpClient, opts *entity.GatewaySecurityJWTOpts) Signer {
 	return &JWT{
-		sign: sign,
-		opts: opts,
+		httpCl: httpCl,
+		opts:   opts,
 	}
 }
 
@@ -28,7 +29,7 @@ func (m *JWT) GetSignature(_ string, _ map[string]interface{}) (string, error) {
 		return m.token.token, nil
 	}
 
-	res, err := m.sign.httpCl.MakeRequest(m.opts.Request, m.opts.ReqBody)
+	res, err := m.httpCl.MakeRequest(m.opts.Request, m.opts.ReqBody)
 	if err != nil {
 		return "", err
 	}

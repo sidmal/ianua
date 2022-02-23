@@ -2,7 +2,7 @@ package entity
 
 type Method struct {
 	*Request
-	SecurityHashTemplate string
+	HashTemplate string
 }
 
 type Request struct {

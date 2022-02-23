@@ -1,6 +1,7 @@
 package gateway
 
 import (
+	"fmt"
 	"github.com/sidmal/ianua/internal/entity"
 	"github.com/sidmal/ianua/internal/gateway/security"
 	"github.com/sidmal/ianua/internal/gateway/transport"
@@ -12,17 +13,8 @@ type Gateways map[string]*Gateway
 
 type Gateway struct {
 	transport *transport.HttpClient
-	Methods   []*Action
-}
-
-type Action struct {
-	// Http method to request to gateway API endpoint
-	Method string
-	// Gateway API endpoint
-	Endpoint string
-	// Body template with placeholders to request to API endpoint
-	Body      string
-	Signature security.Signer
+	signer    security.Signer
+	methods   []*entity.Method
 }
 
 type HttpTransport struct {
@@ -30,18 +22,42 @@ type HttpTransport struct {
 	logger    *zap.Logger
 }
 
+var (
+	gateways Gateways
+)
+
+const (
+	errorGatewayNotFound = `gateway with name "%s" not found`
+)
+
 func NewGateway(opts *entity.GatewayOpts, logger *zap.Logger) (*Gateway, error) {
 	httpCl, err := transport.NewHttpClient(opts.HttpClOpts, logger)
 	if err != nil {
 		return nil, err
 	}
 
+	signer, err := security.NewSigner(httpCl, opts.Security)
+	if err != nil {
+		return nil, err
+	}
+
 	gw := &Gateway{
 		transport: httpCl,
+		signer:    signer,
+		methods:   opts.Methods,
+	}
+	gateways[opts.Name] = gw
+
+	return gw, nil
+}
+
+func ExecuteGatewayMethods(gatewayName string, params map[string]interface{}) error {
+	gw, ok := gateways[gatewayName]
+	if !ok {
+		return fmt.Errorf(`gateway with name "%s" not found`, gatewayName)
 	}
 
-	if opts.Security != nil {
-
+	for _, method := range gw.methods {
+		gw.transport.MakeRequest(method.Request)
 	}
-
 }

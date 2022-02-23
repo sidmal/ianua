@@ -6,6 +6,7 @@ import (
 	"crypto/rsa"
 	"encoding/base64"
 	"encoding/hex"
+	"fmt"
 	"time"
 )
 
@@ -32,6 +33,11 @@ const (
 	GatewaySecurityJWTOptsRspFormatRaw  = "raw"
 	GatewaySecurityJWTOptsRspFormatJSON = "json"
 	GatewaySecurityJWTOptsRspFormatXML  = "xml"
+)
+
+const (
+	ErrorHashUnknownAlgo     = `unknown hash algo with name "%s"`
+	ErrorUnknownSecurityType = `unknown security type with name "%s"`
 )
 
 var (
@@ -89,4 +95,13 @@ type GatewaySecurityHashAfterFunc struct {
 
 type GatewaySecurityHashAfterFuncOpts struct {
 	PrivateKey *rsa.PrivateKey
+}
+
+func (m *GatewaySecurityHashAfterFunc) ExecuteFunc(hashed []byte, hashAlgo crypto.Hash) ([]byte, error) {
+	fn, ok := HashAfterFns[m.Algo]
+	if !ok {
+		return nil, fmt.Errorf(ErrorHashUnknownAlgo, m.Algo)
+	}
+
+	return fn(hashed, hashAlgo, m.Opts)
 }

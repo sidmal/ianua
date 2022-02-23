@@ -1,46 +1,28 @@
 package security
 
 import (
-	"crypto"
-	"crypto/rand"
-	"crypto/rsa"
-	"encoding/base64"
-	"encoding/hex"
+	"fmt"
+	"github.com/sidmal/ianua/internal/entity"
 	"github.com/sidmal/ianua/internal/gateway/transport"
-	"github.com/valyala/fasttemplate"
-)
-
-const (
-	templateEngineStartTag = "{{"
-	templateEngineEndTag   = "}}"
 )
 
 type Signer interface {
 	GetSignature(template string, params map[string]interface{}) (string, error)
 }
 
-type Sign struct {
-	httpCl *transport.HttpClient
-}
-
-func (m *Sign) executeTemplate(template string, params map[string]interface{}) string {
-	return fasttemplate.ExecuteString(template, templateEngineStartTag, templateEngineEndTag, params)
-}
-
-func (m *Sign) rsaPkcs1Base64Encrypt(privateKey *rsa.PrivateKey, hashed []byte) (string, error) {
-	res, err := rsa.SignPKCS1v15(rand.Reader, privateKey, crypto.SHA1, hashed[:])
-	if err != nil {
-		return "", err
+func NewSigner(httpCl *transport.HttpClient, opts *entity.GatewaySecurity) (Signer, error) {
+	if opts == nil {
+		return newNoneSigner(), nil
 	}
 
-	return base64.StdEncoding.EncodeToString(res), nil
-}
-
-func (m *Sign) rsaPkcs1HexEncrypt(privateKey *rsa.PrivateKey, hashed []byte) (string, error) {
-	res, err := rsa.SignPKCS1v15(rand.Reader, privateKey, crypto.SHA1, hashed[:])
-	if err != nil {
-		return "", err
+	switch opts.Type {
+	case entity.GatewaySecurityTypeHash:
+		return newHashSigner(opts.HashOpts), nil
+	case entity.GatewaySecurityTypeJWT:
+		return newJWTSigner(httpCl, opts.JWTOpts), nil
+	case entity.GatewaySecurityTypeNone:
+		return newNoneSigner(), nil
 	}
 
-	return hex.EncodeToString(res), nil
+	return nil, fmt.Errorf(entity.ErrorUnknownSecurityType, opts.Type)
 }
