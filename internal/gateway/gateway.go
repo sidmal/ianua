@@ -2,14 +2,17 @@ package gateway
 
 import (
 	"github.com/sidmal/ianua/internal/entity"
-	"github.com/sidmal/ianua/internal/gateway/signature"
+	"github.com/sidmal/ianua/internal/gateway/security"
+	"github.com/sidmal/ianua/internal/gateway/transport"
 	"go.uber.org/zap"
 	"net/http"
 )
 
+type Gateways map[string]*Gateway
+
 type Gateway struct {
-	HttpClient *http.Client
-	Actions    []*Action
+	transport *transport.HttpClient
+	Methods   []*Action
 }
 
 type Action struct {
@@ -19,31 +22,26 @@ type Action struct {
 	Endpoint string
 	// Body template with placeholders to request to API endpoint
 	Body      string
-	Signature signature.Signer
+	Signature security.Signer
 }
 
-type HttpClientSettings struct {
+type HttpTransport struct {
+	Transport http.RoundTripper
+	logger    *zap.Logger
 }
 
-type Gateways map[string]*Gateway
-
-func BuildGateway(gw *entity.Gateway) error {
-
-}
-
-func newHttpClient(opts *entity.HttpClientOpts, logger *zap.Logger) (*http.Client, error) {
-	transport, err := m.getHttpTransport()
+func NewGateway(opts *entity.GatewayOpts, logger *zap.Logger) (*Gateway, error) {
+	httpCl, err := transport.NewHttpClient(opts.HttpClOpts, logger)
 	if err != nil {
 		return nil, err
 	}
 
-	cl := &http.Client{
-		Timeout: m.ResponseWaitTimeout,
-		Transport: &HttpTransport{
-			Transport: transport,
-			logger:    logger,
-		},
+	gw := &Gateway{
+		transport: httpCl,
 	}
 
-	return cl, nil
+	if opts.Security != nil {
+
+	}
+
 }

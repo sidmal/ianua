@@ -1,9 +1,16 @@
 package entity
 
 type Method struct {
-	Url                  string
-	RequestMethod        string
-	RequestBody          string
-	RequestHeaders       []map[string]string
+	*Request
 	SecurityHashTemplate string
+}
+
+type Request struct {
+	Url                 string
+	Headers             map[string]string
+	ReqMethod           string
+	ReqBody             string
+	RspSuccessCode      int
+	RspFormat           string
+	RspResultFieldNames []string
 }

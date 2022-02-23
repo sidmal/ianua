@@ -1,6 +1,13 @@
 package entity
 
-import "time"
+import (
+	"crypto"
+	"crypto/rand"
+	"crypto/rsa"
+	"encoding/base64"
+	"encoding/hex"
+	"time"
+)
 
 const (
 	GatewaySecurityTypeNone = "none"
@@ -16,13 +23,35 @@ const (
 )
 
 const (
-	GatewaySecurityHashAfterFuncAlgoRsaPkcs1 = "rsa_pkcs1"
-	GatewaySecurityHashAfterFuncAlgoBase64   = "base64"
+	HashAfterFuncAlgoHex      = "hex"
+	HashAfterFuncAlgoBase64   = "base64"
+	HashAfterFuncAlgoRsaPkcs1 = "rsa_pkcs1"
 )
 
-type Gateway struct {
+const (
+	GatewaySecurityJWTOptsRspFormatRaw  = "raw"
+	GatewaySecurityJWTOptsRspFormatJSON = "json"
+	GatewaySecurityJWTOptsRspFormatXML  = "xml"
+)
+
+var (
+	HashAfterFns = map[string]func(hashed []byte, hashAlgo crypto.Hash, opts *GatewaySecurityHashAfterFuncOpts) ([]byte, error){
+		HashAfterFuncAlgoHex: func(hashed []byte, _ crypto.Hash, _ *GatewaySecurityHashAfterFuncOpts) ([]byte, error) {
+			return []byte(hex.EncodeToString(hashed)), nil
+		},
+		HashAfterFuncAlgoBase64: func(hashed []byte, _ crypto.Hash, _ *GatewaySecurityHashAfterFuncOpts) ([]byte, error) {
+			return []byte(base64.StdEncoding.EncodeToString(hashed)), nil
+		},
+		HashAfterFuncAlgoRsaPkcs1: func(hashed []byte, hashAlgo crypto.Hash, opts *GatewaySecurityHashAfterFuncOpts) ([]byte, error) {
+			return rsa.SignPKCS1v15(rand.Reader, opts.PrivateKey, hashAlgo, hashed[:])
+		},
+	}
+)
+
+type GatewayOpts struct {
 	Name       string
 	HttpClOpts *HttpClientOpts
+	Security   *GatewaySecurity
 	Methods    []*Method
 }
 
@@ -38,16 +67,14 @@ type TLS struct {
 }
 
 type GatewaySecurity struct {
-	Type string
+	Type     string
+	JWTOpts  *GatewaySecurityJWTOpts
+	HashOpts *GatewaySecurityHashOpts
 }
 
 type GatewaySecurityJWTOpts struct {
-	Url                    string
-	Headers                []map[string]string
-	RequestMethod          string
-	RequestBody            string
-	ResponseTokenFieldName string
-	TokenLifetime          time.Duration
+	*Request
+	TokenLifetime time.Duration
 }
 
 type GatewaySecurityHashOpts struct {
@@ -61,5 +88,5 @@ type GatewaySecurityHashAfterFunc struct {
 }
 
 type GatewaySecurityHashAfterFuncOpts struct {
-	PrivateKey string
+	PrivateKey *rsa.PrivateKey
 }
